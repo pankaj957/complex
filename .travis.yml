@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t pankaj/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run pankaj/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t pankaj/multi-client ./client
+  - docker build -t pankaj/multi-nginx ./nginx
+  - docker build -t pankaj/multi-server ./server
+  - docker build -t pankaj/multi-worker ./worker
+  # Log in to the Docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password--stdin
+  # Take those images and push them to docker hub
+  - docker push pankaj/multi-client
+  - docker push pankaj/multi-nginx
+  - docker push pankaj/multi-server
+  - docker push pankaj/multi-worker
